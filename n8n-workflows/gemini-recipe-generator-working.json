@@ -1,0 +1,109 @@
+{
+  "name": "Gemini Recipe Generator - Working Version",
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [240, 300],
+      "webhookId": "recipe-generator"
+    },
+    {
+      "parameters": {
+        "url": "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "{\n  \"contents\": [{\n    \"parts\": [{\n      \"text\": \"Create a recipe using these ingredients: {{ $json.input }}. Respond with only valid JSON in this format: {\\\"title\\\": \\\"Recipe Name\\\", \\\"description\\\": \\\"Brief description\\\", \\\"cookingTime\\\": \\\"30 minutes\\\", \\\"servings\\\": 4, \\\"difficulty\\\": \\\"Easy\\\", \\\"ingredients\\\": [\\\"ingredient 1\\\", \\\"ingredient 2\\\"], \\\"instructions\\\": [\\\"step 1\\\", \\\"step 2\\\"]}\"\n    }]\n  }],\n  \"generationConfig\": {\n    \"temperature\": 0.7,\n    \"maxOutputTokens\": 1024\n  }\n}"
+      },
+      "id": "gemini-api-call",
+      "name": "Gemini API Call",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [460, 300],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "gemini-api-key",
+          "name": "Gemini API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "functionCode": "// Get the response from Gemini API\nconst response = items[0].json;\nconst originalInput = $input.first().json;\n\nconsole.log('Gemini API Response:', JSON.stringify(response, null, 2));\n\ntry {\n  // Check if we have a valid response\n  if (!response.candidates || !response.candidates[0] || !response.candidates[0].content) {\n    console.log('Invalid API response structure');\n    throw new Error('Invalid API response structure');\n  }\n\n  // Extract the text from the response\n  let generatedText = response.candidates[0].content.parts[0].text;\n  console.log('Generated text:', generatedText);\n  \n  // Clean up the text (remove markdown formatting)\n  generatedText = generatedText.replace(/\`\`\`json/g, '').replace(/\`\`\`/g, '').trim();\n  \n  // Parse the JSON\n  let recipe;\n  try {\n    recipe = JSON.parse(generatedText);\n    console.log('Parsed recipe:', recipe);\n  } catch (parseError) {\n    console.log('JSON parse error:', parseError.message);\n    // Try to extract JSON from the text\n    const jsonMatch = generatedText.match(/\\{[\\s\\S]*\\}/);\n    if (jsonMatch) {\n      recipe = JSON.parse(jsonMatch[0]);\n    } else {\n      throw new Error('Could not extract valid JSON');\n    }\n  }\n\n  // Validate required fields\n  if (!recipe.title || !recipe.ingredients || !recipe.instructions) {\n    throw new Error('Missing required recipe fields');\n  }\n\n  // Ensure arrays are properly formatted\n  if (!Array.isArray(recipe.ingredients)) {\n    recipe.ingredients = [recipe.ingredients];\n  }\n  \n  if (!Array.isArray(recipe.instructions)) {\n    recipe.instructions = [recipe.instructions];\n  }\n\n  // Set defaults for missing fields\n  recipe.description = recipe.description || 'A delicious homemade recipe';\n  recipe.cookingTime = recipe.cookingTime || '30 minutes';\n  recipe.servings = Number(recipe.servings) || 4;\n  recipe.difficulty = recipe.difficulty || 'Medium';\n\n  // Validate difficulty\n  if (!['Easy', 'Medium', 'Hard'].includes(recipe.difficulty)) {\n    recipe.difficulty = 'Medium';\n  }\n\n  // Add metadata\n  recipe.generatedAt = new Date().toISOString();\n  recipe.source = 'n8n-gemini';\n  recipe.model = 'gemini-1.5-flash';\n  recipe.userId = originalInput.userId || 'anonymous';\n\n  console.log('Final recipe:', recipe);\n  return [{ json: recipe }];\n\n} catch (error) {\n  console.error('Processing error:', error.message);\n  \n  // Create a proper fallback based on the actual input\n  const inputText = originalInput.input || 'unknown ingredients';\n  const ingredients = inputText.split(',').map(item => item.trim());\n  \n  const fallbackRecipe = {\n    title: `${ingredients[0]} Recipe`,\n    description: `A delicious recipe using ${ingredients.join(', ')}`,\n    cookingTime: '30 minutes',\n    servings: 4,\n    difficulty: 'Medium',\n    ingredients: [\n      ...ingredients.map(ing => `2 cups ${ing}`),\n      '2 tablespoons olive oil',\n      '1 teaspoon salt',\n      '1/2 teaspoon black pepper'\n    ],\n    instructions: [\n      'Prepare all ingredients and wash them thoroughly',\n      'Heat olive oil in a large pan over medium heat',\n      `Add ${ingredients[0]} and cook for 5 minutes`,\n      'Add remaining ingredients and stir well',\n      'Season with salt and pepper to taste',\n      'Cook for 15-20 minutes until tender',\n      'Serve hot and enjoy your meal'\n    ],\n    generatedAt: new Date().toISOString(),\n    source: 'n8n-fallback',\n    model: 'fallback',\n    userId: originalInput.userId || 'anonymous',\n    _error: error.message,\n    _note: 'This is a fallback recipe - Gemini API may not be working properly'\n  };\n\n  console.log('Using fallback recipe:', fallbackRecipe);\n  return [{ json: fallbackRecipe }];\n}"
+      },
+      "id": "process-recipe",
+      "name": "Process Recipe",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [680, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}"
+      },
+      "id": "webhook-response",
+      "name": "Webhook Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [900, 300]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Gemini API Call",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Gemini API Call": {
+      "main": [
+        [
+          {
+            "node": "Process Recipe",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Recipe": {
+      "main": [
+        [
+          {
+            "node": "Webhook Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "tags": ["recipe", "gemini", "ai", "working"],
+  "triggerCount": 1,
+  "updatedAt": "2024-01-20T10:00:00.000Z",
+  "versionId": "working"
+}
