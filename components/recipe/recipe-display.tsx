@@ -22,7 +22,7 @@ interface Recipe {
 
 interface RecipeDisplayProps {
   recipe: Recipe
-  onSave?: (recipe: Recipe) => Promise<void> 
+  onSave?: (recipe: Recipe) => Promise<void> // async callback
 }
 
 export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
@@ -37,33 +37,29 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
     )
   }
 
-     // ...existing code...
-    const handleSaveClick = async () => {
-      if (!onSave) return
-  
-      setIsSaving(true)
-      try {
-        await onSave(recipe)
-        setIsSaved(true)
-        // Success toast only if no error thrown
-        toast({
-          title: "Recipe saved!",
-          description: "Recipe has been added to your collection.",
-        })
-      } catch (error: any) {
-        setIsSaved(false)
-        const authErrors = ["Sign in first", "Authentication required"]
-        const errorMsg = error?.message || error?.toString() || ""
-        toast({
-          title: "Save Failed",
-          description: errorMsg,
-          variant: "destructive",
-        })
-      } finally {
-        setIsSaving(false)
-      }
+  const handleSaveClick = async () => {
+    if (!onSave) return
+
+    setIsSaving(true)
+    try {
+      await onSave(recipe)
+      setIsSaved(true)
+      toast({
+        title: "Recipe saved!",
+        description: "Recipe has been added to your collection.",
+      })
+    } catch (error) {
+      console.error("Save error:", error)
+      toast({
+        title: "Save Failed",
+        description:
+          error instanceof Error ? error.message : "Failed to save recipe. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
     }
-  // ...existing code....
+  }
 
   const progress = (completedSteps.length / recipe.instructions.length) * 100
 
