@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { CheckCircle, XCircle, AlertTriangle, RefreshCw, Zap } from "lucide-react"
-
 interface DebugTest {
   test: string
   status: "PASS" | "FAIL" | "ERROR"
@@ -15,7 +14,6 @@ interface DebugTest {
   solution?: string
   solutions?: string[]
 }
-
 interface DebugInfo {
   timestamp: string
   environment: Record<string, string>
