@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ChefHat, Sparkles, BookOpen, AlertTriangle } from "lucide-react"
 import Link from "next/link"
+const [saveError, setSaveError] = useState<string | null>(null)
+
 
 interface Recipe {
   title: string
@@ -60,18 +62,26 @@ export default function HomePage() {
   }
 
   const handleSaveRecipe = async (recipe: Recipe) => {
-    const response = await fetch("/api/save-recipe", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(recipe),
-    })
+  setSaveError(null)
+  const response = await fetch("/api/save-recipe", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(recipe),
+  })
 
-    if (!response.ok) {
-      throw new Error("Failed to save recipe")
+  if (!response.ok) {
+    const errorData = await response.json()
+    if (response.status === 401 && errorData.details === "Sign in first") {
+      setSaveError("Sign in first")
+    } else {
+      setSaveError(errorData.error || "Failed to save recipe")
     }
+    return
   }
+  // ...handle success...
+}
 
   if (configError) {
     return (
@@ -195,21 +205,28 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key`}
             </TabsContent>
 
             <TabsContent value="recipe" className="space-y-6">
-              {currentRecipe ? (
-                <RecipeDisplay recipe={currentRecipe} onSave={handleSaveRecipe} />
-              ) : (
-                <Card className="max-w-2xl mx-auto">
-                  <CardContent className="p-8 text-center">
-                    <ChefHat className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">No recipe selected</h3>
-                    <p className="text-muted-foreground mb-4">
-                      Generate a new recipe or select one from your collection to get started.
-                    </p>
-                    <Button onClick={() => setActiveTab("generate")}>Generate Recipe</Button>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
+  {saveError && (
+    <Alert className="max-w-2xl mx-auto mb-4" variant="destructive">
+      <AlertTriangle className="h-4 w-4" />
+      <AlertTitle>Error</AlertTitle>
+      <AlertDescription>{saveError}</AlertDescription>
+    </Alert>
+  )}
+  {currentRecipe ? (
+    <RecipeDisplay recipe={currentRecipe} onSave={handleSaveRecipe} />
+  ) : (
+    <Card className="max-w-2xl mx-auto">
+      <CardHeader>
+        <CardTitle className="text-center">No Recipe Selected</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-center text-muted-foreground">
+          Generate a recipe or select one from your history to view it here.
+        </p>
+      </CardContent>
+    </Card>
+  )}
+</TabsContent>
 
             <TabsContent value="history" className="space-y-6">
               <RecipeHistory onSelectRecipe={handleRecipeSelected} />
