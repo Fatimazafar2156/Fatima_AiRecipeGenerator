@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { useToast } from "@/hooks/use-toast"
 import { Clock, Users, Search, Trash2, Eye } from "lucide-react"
-
 interface SavedRecipe {
   id: string
   title: string

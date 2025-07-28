@@ -9,7 +9,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
 import { ChefHat, Sparkles, Info, Plus, Minus, X } from "lucide-react"
-
 interface Recipe {
   title: string
   description: string

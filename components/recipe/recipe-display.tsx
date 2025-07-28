@@ -22,7 +22,7 @@ interface Recipe {
 
 interface RecipeDisplayProps {
   recipe: Recipe
-  onSave?: (recipe: Recipe) => Promise<void> // async callback
+  onSave?: (recipe: Recipe) => Promise<void> 
 }
 
 export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
