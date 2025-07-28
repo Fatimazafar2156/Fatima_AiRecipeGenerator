@@ -11,9 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ChefHat, Sparkles, BookOpen, AlertTriangle } from "lucide-react"
 import Link from "next/link"
-const [saveError, setSaveError] = useState<string | null>(null)
-
-
 interface Recipe {
   title: string
   description: string
@@ -28,6 +25,8 @@ export default function HomePage() {
   const [currentRecipe, setCurrentRecipe] = useState<Recipe | null>(null)
   const [activeTab, setActiveTab] = useState("generate")
   const [configError, setConfigError] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
+
 
   useEffect(() => {
     // Check if required environment variables are present
@@ -61,7 +60,9 @@ export default function HomePage() {
     setActiveTab("recipe")
   }
 
-  const handleSaveRecipe = async (recipe: Recipe) => {
+  // ...existing code...
+
+const handleSaveRecipe = async (recipe: Recipe) => {
   setSaveError(null)
   const response = await fetch("/api/save-recipe", {
     method: "POST",
@@ -73,15 +74,21 @@ export default function HomePage() {
 
   if (!response.ok) {
     const errorData = await response.json()
-    if (response.status === 401 && errorData.details === "Sign in first") {
+    if (
+      response.status === 401 &&
+      (errorData.details === "Sign in first" || errorData.error === "Authentication required")
+    ) {
       setSaveError("Sign in first")
     } else {
       setSaveError(errorData.error || "Failed to save recipe")
     }
-    return
+    return // Do not show recipe saved prompt
   }
   // ...handle success...
 }
+
+// ...existing code...
+
 
   if (configError) {
     return (

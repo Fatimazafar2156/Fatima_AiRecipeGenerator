@@ -2,7 +2,13 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle
+} from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useToast } from "@/hooks/use-toast"
@@ -22,7 +28,7 @@ interface Recipe {
 
 interface RecipeDisplayProps {
   recipe: Recipe
-  onSave?: (recipe: Recipe) => Promise<void> 
+  onSave?: (recipe: Recipe) => Promise<void>
 }
 
 export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
@@ -33,7 +39,9 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
 
   const toggleStep = (stepIndex: number) => {
     setCompletedSteps((prev) =>
-      prev.includes(stepIndex) ? prev.filter((i) => i !== stepIndex) : [...prev, stepIndex]
+      prev.includes(stepIndex)
+        ? prev.filter((i) => i !== stepIndex)
+        : [...prev, stepIndex]
     )
   }
 
@@ -46,22 +54,22 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
       setIsSaved(true)
       toast({
         title: "Recipe saved!",
-        description: "Recipe has been added to your collection.",
+        description: "Recipe has been added to your collection."
       })
-    } catch (error) {
-      console.error("Save error:", error)
+    } catch (error: any) {
+      setIsSaved(false)
       toast({
         title: "Save Failed",
-        description:
-          error instanceof Error ? error.message : "Failed to save recipe. Please try again.",
-        variant: "destructive",
+        description: error?.message || "Something went wrong",
+        variant: "destructive"
       })
     } finally {
       setIsSaving(false)
     }
   }
 
-  const progress = (completedSteps.length / recipe.instructions.length) * 100
+  const progress =
+    (completedSteps.length / recipe.instructions.length) * 100
 
   return (
     <div className="w-full max-w-4xl mx-auto space-y-6">
@@ -71,7 +79,9 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
           <AlertDescription>
             <strong>Note:</strong> {recipe._note}
             {recipe._reason && (
-              <div className="mt-2 text-sm text-muted-foreground">Reason: {recipe._reason}</div>
+              <div className="mt-2 text-sm text-muted-foreground">
+                Reason: {recipe._reason}
+              </div>
             )}
           </AlertDescription>
         </Alert>
@@ -82,14 +92,16 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
           <div className="flex items-start justify-between">
             <div className="space-y-2">
               <CardTitle className="text-2xl">{recipe.title}</CardTitle>
-              <CardDescription className="text-base">{recipe.description}</CardDescription>
+              <CardDescription className="text-base">
+                {recipe.description}
+              </CardDescription>
             </div>
             <Badge variant="secondary" className="ml-4">
               {recipe.difficulty}
             </Badge>
           </div>
 
-          <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+          <div className="flex items-center space-x-6 text-sm text-muted-foreground mt-4">
             <div className="flex items-center space-x-1">
               <Clock className="h-4 w-4" />
               <span>{recipe.cookingTime}</span>
@@ -103,6 +115,7 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Ingredients */}
         <Card className="lg:col-span-1">
           <CardHeader>
             <CardTitle>Ingredients</CardTitle>
@@ -119,6 +132,7 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
           </CardContent>
         </Card>
 
+        {/* Instructions */}
         <Card className="lg:col-span-2">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -127,7 +141,7 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
                 {completedSteps.length} of {recipe.instructions.length} steps completed
               </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
+            <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
               <div
                 className="bg-orange-500 h-2 rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
@@ -146,13 +160,19 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
                         : "border-gray-300 hover:border-orange-500"
                     }`}
                   >
-                    {completedSteps.includes(index) && <Check className="w-3 h-3" />}
+                    {completedSteps.includes(index) && (
+                      <Check className="w-3 h-3" />
+                    )}
                   </button>
                   <div className="flex-1">
-                    <span className="font-medium text-orange-600 text-sm">Step {index + 1}</span>
+                    <span className="font-medium text-orange-600 text-sm">
+                      Step {index + 1}
+                    </span>
                     <p
                       className={`text-sm mt-1 ${
-                        completedSteps.includes(index) ? "line-through text-muted-foreground" : ""
+                        completedSteps.includes(index)
+                          ? "line-through text-muted-foreground"
+                          : ""
                       }`}
                     >
                       {instruction}
@@ -164,7 +184,9 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
 
             {progress === 100 && (
               <div className="mt-6 p-4 bg-green-50 border border-green-200 rounded-lg text-center">
-                <div className="text-green-600 font-semibold">🎉 Congratulations!</div>
+                <div className="text-green-600 font-semibold">
+                  🎉 Congratulations!
+                </div>
                 <div className="text-green-700 text-sm mt-1">
                   You've completed the recipe! Enjoy your delicious meal.
                 </div>
@@ -174,6 +196,7 @@ export default function RecipeDisplay({ recipe, onSave }: RecipeDisplayProps) {
         </Card>
       </div>
 
+      {/* Save Button */}
       <div className="flex justify-center">
         <Button
           onClick={handleSaveClick}
