@@ -1,11 +1,11 @@
 "use client"
 
 import { useState } from "react"
-import { createClient } from "@/lib/supabase"
-import { Button } from "@/components/ui/button"
 import { useRouter } from "next/navigation"
-import { useToast } from "@/hooks/use-toast"
 import { LogOut, User } from "lucide-react"
+import { createClient } from "@/lib/supabase"
+import { useToast } from "@/hooks/use-toast"
+import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import type { User as SupabaseUser } from "@supabase/supabase-js"
@@ -23,51 +23,32 @@ export default function AuthButton({ user }: AuthButtonProps) {
     setIsLoading(true)
     try {
       const supabase = createClient()
-
-      // Check if we have the required environment variables
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
 
       if (!supabaseUrl) {
-        throw new Error("Supabase URL not configured. Please check your environment variables.")
+        throw new Error("Supabase URL not configured. Check your .env.local file.")
       }
 
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/api/auth/callback`,
-          queryParams: {
-            access_type: "offline",
-            prompt: "consent",
-          },
+          queryParams: { access_type: "offline", prompt: "consent" },
         },
       })
 
-      if (error) {
-        console.error("Sign in error:", error)
-        throw error
-      }
+      if (error) throw error
     } catch (error) {
-      console.error("Auth error:", error)
-
-      let errorMessage = "Failed to sign in with Google. Please try again."
-
-      if (error instanceof Error) {
-        if (error.message.includes("not configured")) {
-          errorMessage = error.message
-        } else if (error.message.includes("Invalid login credentials")) {
-          errorMessage =
-            "Google OAuth is not properly configured in Supabase. Please check your Supabase Authentication settings."
-        } else if (error.message.includes("redirect_uri_mismatch")) {
-          errorMessage = "OAuth redirect URL mismatch. Please check your Google OAuth configuration in Supabase."
-        } else if (error.message.includes("OAuth")) {
-          errorMessage =
-            "Google OAuth is not configured in Supabase. Please set up Google OAuth in your Supabase dashboard under Authentication > Providers."
-        }
-      }
+      const message =
+        error instanceof Error
+          ? error.message.includes("redirect_uri_mismatch")
+            ? "OAuth redirect URL mismatch. Fix it in your Supabase provider settings."
+            : error.message
+          : "Failed to sign in."
 
       toast({
         title: "Authentication Error",
-        description: errorMessage,
+        description: message,
         variant: "destructive",
       })
     } finally {
@@ -79,18 +60,11 @@ export default function AuthButton({ user }: AuthButtonProps) {
     try {
       const supabase = createClient()
       const { error } = await supabase.auth.signOut()
-
-      if (error) {
-        throw error
-      }
+      if (error) throw error
 
       router.refresh()
-      toast({
-        title: "Signed out",
-        description: "You have been successfully signed out.",
-      })
-    } catch (error) {
-      console.error("Sign out error:", error)
+      toast({ title: "Signed out", description: "You have been signed out." })
+    } catch {
       toast({
         title: "Error",
         description: "Failed to sign out. Please try again.",
@@ -103,10 +77,10 @@ export default function AuthButton({ user }: AuthButtonProps) {
     return (
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Button variant="ghost" className="h-8 w-8 rounded-full p-0">
             <Avatar className="h-8 w-8">
               <AvatarImage
-                src={user.user_metadata?.avatar_url || "/placeholder.svg?height=32&width=32"}
+                src={user.user_metadata?.avatar_url || "/placeholder.svg"}
                 alt={user.user_metadata?.full_name || "User"}
               />
               <AvatarFallback>
@@ -115,16 +89,14 @@ export default function AuthButton({ user }: AuthButtonProps) {
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent className="w-56" align="end" forceMount>
-          <div className="flex items-center justify-start gap-2 p-2">
-            <div className="flex flex-col space-y-1 leading-none">
-              <p className="font-medium">{user.user_metadata?.full_name || "User"}</p>
-              <p className="w-[200px] truncate text-sm text-muted-foreground">{user.email}</p>
-            </div>
+        <DropdownMenuContent className="w-56" align="end">
+          <div className="p-2">
+            <p className="font-medium">{user.user_metadata?.full_name || "User"}</p>
+            <p className="text-sm text-muted-foreground truncate">{user.email}</p>
           </div>
           <DropdownMenuItem onClick={handleSignOut}>
             <LogOut className="mr-2 h-4 w-4" />
-            <span>Sign out</span>
+            Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
