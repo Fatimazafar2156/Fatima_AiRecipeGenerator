@@ -5,6 +5,7 @@ import Header from "@/components/layout/header"
 import RecipeGenerator from "@/components/recipe/recipe-generator"
 import RecipeDisplay from "@/components/recipe/recipe-display"
 import RecipeHistory from "@/components/recipe/recipe-history"
+import Footer from "@/components/layout/footer" 
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -133,6 +134,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key`}
             </AlertDescription>
           </Alert>
         </main>
+       <Footer /> {/* ✅ Add Footer */}
       </div>
     )
   }
@@ -241,6 +243,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key`}
           </div>
         </Tabs>
       </main>
+     <Footer /> {/* ✅ Add Footer at the bottom */}
     </div>
   )
 }
