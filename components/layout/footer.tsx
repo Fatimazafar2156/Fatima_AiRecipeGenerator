@@ -1,4 +1,5 @@
-// components/layout/Footer.tsx
+
+"use client"
 import { ChefHat, Linkedin, Instagram, Globe } from "lucide-react";
 
 export default function Footer() {
