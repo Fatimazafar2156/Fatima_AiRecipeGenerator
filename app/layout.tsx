@@ -26,11 +26,9 @@ export default function RootLayout({
           <div className="flex flex-col min-h-screen">
             {/* Main content fills the space */}
             <main className="flex-1">{children}</main>
-
             {/* Footer stays at the bottom */}
             <Footer />
           </div>
-
           <Toaster />
         </ThemeProvider>
       </body>
