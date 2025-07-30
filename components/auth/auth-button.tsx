@@ -28,14 +28,19 @@ export default function AuthButton({ user }: AuthButtonProps) {
       if (!supabaseUrl) {
         throw new Error("Supabase URL not configured. Check your .env.local file.")
       }
+      const redirectTo =
+  process.env.NODE_ENV === "development"
+    ? "http://localhost:3000/api/auth/callback"
+    : "https://fatima-ai-recipe-generator-lapf0vrba-fatimas-projects-877cc0df.vercel.app/api/auth/callback"
 
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: "https://fatima-ai-recipe-generator-lapf0vrba-fatimas-projects-877cc0df.vercel.app/api/auth/callback",
-          queryParams: { access_type: "offline", prompt: "consent" },
-        },
-      })
+     const { error } = await supabase.auth.signInWithOAuth({
+  provider: "google",
+  options: {
+    redirectTo,
+    queryParams: { access_type: "offline", prompt: "consent" },
+  },
+})
+
 
       if (error) throw error
     } catch (error) {
