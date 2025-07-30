@@ -32,7 +32,7 @@ export default function AuthButton({ user }: AuthButtonProps) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/api/auth/callback`,
+          redirectTo: "https://fatima-ai-recipe-generator-lapf0vrba-fatimas-projects-877cc0df.vercel.app/api/auth/callback",
           queryParams: { access_type: "offline", prompt: "consent" },
         },
       })
